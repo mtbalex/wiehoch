@@ -1,26 +1,137 @@
 <!DOCTYPE html>
 <html>
-
   <head>
-    <title>NodeJS Starter Application</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="stylesheets/style.css">
+    <title>Elevation service</title>
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
   </head>
-
   <body>
-    <table>
-      <tr>
-        <td style= "width:30%;">
-          <img class = "newappIcon" src="images/newapp-icon.png">
-        </td>
-        <td>
-          <h1 id="message">Hello World!</h1>
-          <p class='description'></p> Thanks for creating a <span class = "blue">NodeJS Starter Application</span>.
-        </td>
-      </tr>
-    </table>
-  </body>
+    <div id="map"></div>
+    <script>
+      var map;
+      var elevator;
 
+      function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 16,
+          center: {lat: 48.783762, lng: 9.181620},
+          mapTypeId: 'terrain'
+        });
+        elevator = new google.maps.ElevationService;
+        var infowindow = new google.maps.InfoWindow({map: map});
+
+        // Add a listener for the click event. Display the elevation for the LatLng of
+        // the click inside the infowindow.
+        map.addListener('click', function(event) {
+          displayLocationElevation(event.latLng, elevator, infowindow);
+        });
+        getLocation();
+      }
+
+      function getLocation() {
+        console.log("getLocation");
+        if (navigator.geolocation) {
+                var geo_options = {
+                                enableHighAccuracy: true,
+                                timeout: Infinity,
+                                maximumAge: 0 };
+            navigator.geolocation.watchPosition(showPosition, error, geo_options);
+        } else {
+            alert("Geolocation is not supported by this browser.");
+        }
+      }
+
+      function showPosition(position) {
+        console.log(position);
+        console.log("showPosition: Latitude: " + position.coords.latitude + " Longitude: " + position.coords.longitude);
+
+        //Center map on current position
+        var latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+        map.setCenter(latLng);
+
+        getElevationForPosition(latLng, elevator, displayMarker);
+      }
+
+      function displayMarker(latLng, label)
+      {
+          console.log(label);
+          var infowindow = new google.maps.InfoWindow({
+          content: label.toFixed(0).toString() + "m"
+          });
+
+          var marker = new google.maps.Marker({
+              position: latLng,
+              icon: {
+                path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+                scale: 3,
+                labelOrigin: new google.maps.Point(0, -8)
+              },
+              map: map,
+              title: 'My Position',
+              label: label.toFixed(0).toString()
+          });
+
+          //infowindow.open(map, marker);
+      }
+
+      function getElevationForPosition(location, elevator, callbackForElevation)
+      {
+          elevator.getElevationForLocations({
+            'locations': [location]
+          }, function(results, status) {
+            if (status === 'OK') {
+              // Retrieve the first result
+              if (results[0]) {
+                callbackForElevation(location, results[0].elevation);
+              } else {
+                console.log('No results found');
+              }
+            } else {
+              console.log('Elevation service failed due to: ' + status);
+            }
+          });
+      }
+
+      function displayLocationElevation(location, elevator, infowindow) {
+        // Initiate the location request
+        elevator.getElevationForLocations({
+          'locations': [location]
+        }, function(results, status) {
+
+          if (status === 'OK') {
+            // Retrieve the first result
+            if (results[0]) {
+              // Open the infowindow indicating the elevation at the clicked position.
+              displayMarker(location, results[0].elevation);
+            } else {
+              infowindow.setContent('No results found');
+            }
+          } else {
+            infowindow.setContent('Elevation service failed due to: ' + status);
+          }
+        });
+      }
+
+      function error(err) {
+          alert('Attempt to get location failed: ' + err.message);
+      };
+
+    </script>
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAbddUe14N8kQMuOy7ddrB1J8imDVfBay8&callback=initMap">
+    </script>
+  </body>
 </html>
