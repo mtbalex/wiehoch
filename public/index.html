@@ -48,7 +48,7 @@
                                 enableHighAccuracy: true,
                                 timeout: Infinity,
                                 maximumAge: 0 };
-            navigator.geolocation.watchPosition(showPosition, error, geo_options);
+            navigator.geolocation.getCurrentPosition(showPosition, error, geo_options);
         } else {
             alert("Geolocation is not supported by this browser.");
         }
