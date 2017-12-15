@@ -32,12 +32,10 @@
           scaleControl: true
         });
         elevator = new google.maps.ElevationService;
-        var infowindow = new google.maps.InfoWindow({map: map});
 
         // Add a listener for the click event. Display the elevation for the LatLng of
         // the click inside the infowindow.
         map.addListener('click', function(event) {
-          //displayLocationElevation(event.latLng, elevator, infowindow);
           getElevationForPosition(event.latLng, elevator, displayMarker);
         });
         getLocation();
@@ -70,9 +68,9 @@
       function displayMarker(latLng, label)
       {
           console.log(label);
-          var infowindow = new google.maps.InfoWindow({
-          content: label.toFixed(0).toString() + "m"
-          });
+          //var infowindow = new google.maps.InfoWindow({
+          //content: label.toFixed(0).toString() + "m"
+          //});
 
           var marker = new google.maps.Marker({
               position: latLng,
