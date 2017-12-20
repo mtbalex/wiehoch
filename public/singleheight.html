@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Elevation service</title>
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <script>
+      var map;
+      var elevator;
+
+      function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 16,
+          center: {lat: 48.783762, lng: 9.181620},
+          mapTypeId: 'terrain',
+          scaleControl: true
+        });
+        elevator = new google.maps.ElevationService;
+
+        // Add a listener for the click event. Display the elevation for the LatLng of
+        // the click inside the infowindow.
+        map.addListener('click', function(event) {
+          getElevationForPosition(event.latLng, elevator, displayMarker);
+        });
+        getLocation();
+      }
+
+      function getLocation() {
+        console.log("getLocation");
+        if (navigator.geolocation) {
+                var geo_options = {
+                                enableHighAccuracy: true,
+                                timeout: Infinity,
+                                maximumAge: 0 };
+            navigator.geolocation.getCurrentPosition(showPosition, error, geo_options);
+        } else {
+            alert("Geolocation is not supported by this browser.");
+        }
+      }
+
+      function showPosition(position) {
+        console.log(position);
+        console.log("showPosition: Latitude: " + position.coords.latitude + " Longitude: " + position.coords.longitude);
+
+        //Center map on current position
+        var latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+        map.setCenter(latLng);
+
+        getElevationForPosition(latLng, elevator, displayMarker);
+      }
+
+      function displayMarker(latLng, label)
+      {
+          console.log(label);
+          //var infowindow = new google.maps.InfoWindow({
+          //content: label.toFixed(0).toString() + "m"
+          //});
+
+          var marker = new google.maps.Marker({
+              position: latLng,
+              icon: {
+                path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+                scale: 3,
+                labelOrigin: new google.maps.Point(0, -8)
+              },
+              map: map,
+              label: label.toFixed(0).toString() + "m"
+          });
+
+          marker.addListener('click', function() {
+             marker.setMap(null);
+           });
+
+          //infowindow.open(map, marker);
+      }
+
+      function getElevationForPosition(location, elevator, callbackForElevation)
+      {
+          elevator.getElevationForLocations({
+            'locations': [location]
+          }, function(results, status) {
+            if (status === 'OK') {
+              // Retrieve the first result
+              if (results[0]) {
+                callbackForElevation(location, results[0].elevation);
+              } else {
+                console.log('No results found');
+              }
+            } else {
+              console.log('Elevation service failed due to: ' + status);
+            }
+          });
+      }
+
+      function error(err) {
+          alert('Attempt to get location failed: ' + err.message);
+      };
+
+    </script>
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAbddUe14N8kQMuOy7ddrB1J8imDVfBay8&callback=initMap">
+    </script>
+  </body>
+</html>
