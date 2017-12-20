@@ -180,15 +180,14 @@
               position: latLng,
               icon: {
                 path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
-                scale: 3,
+                scale: 2,
                 labelOrigin: new google.maps.Point(0, -8)
               },
               map: map,
               label: {
-                  text: label.toString(),
+                  text: label.toString() + "m",
                   fontWeight: 'bold',
                   fontSize: '12px',
-                  fontFamily: '"Courier New", Courier,Monospace',
                   color: 'black'
               }
           });
