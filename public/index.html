@@ -34,19 +34,31 @@
         });
         elevator = new google.maps.ElevationService;
 
-        // Add a listener for the click event. Display the elevation for the LatLng of
-        // the click inside the infowindow.
-        //map.addListener('click', function(event) {
-        //  getElevationForPosition(event.latLng, elevator, displayMarker);
-        //});
-        //getCurrentLocationAndExecute(centerMapAndDisplayElevationForPosition);
 
-        // Add a listener for the click event
-        map.addListener('click', handleMapClickEvent);
+	    var pathArray = window.location.hostname.split( '.' );
+        console.log(pathArray);
+        var domainName = pathArray[0];
+        console.log(domainName);
 
-	var pathArray = window.location.hostname.split( '.' );
-	console.log(pathArray[0]);
-	console.log(pathArray);
+
+        if (domainName === "wiesteil")
+        {
+            // Add a listener for the click event
+            map.addListener('click', handleMapClickEvent);
+        }
+        else if (domainName === "wiehoch")
+        {
+            // Add a listener for the click event. Display the elevation for the LatLng of
+            // the click inside the infowindow.
+            map.addListener('click', function(event) {
+              getElevationForPosition(event.latLng, elevator, displayMarker);
+            });
+            getCurrentLocationAndExecute(centerMapAndDisplayElevationForPosition);
+        }
+        else
+        {
+
+        }
       }
 
       // Converts from degrees to radians.
