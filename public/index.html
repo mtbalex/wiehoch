@@ -43,7 +43,10 @@
 
         // Add a listener for the click event
         map.addListener('click', handleMapClickEvent);
-	console.log(window.location.hostname);
+
+	var pathArray = window.location.hostname.split( '.' );
+	console.log(pathArray[0]);
+	console.log(pathArray);
       }
 
       // Converts from degrees to radians.
