@@ -41,14 +41,14 @@
         console.log(domainName);
 
 
-        if (domainName === "wiesteil")
+        if (domainName === "wiesteil" || domainName === "")
         {
             // Add a listener for the click event
             map.addListener('click', handleMapClickEvent);
             getCurrentLocationAndExecute(centerMap);
 
         }
-        else if (domainName === "wiehoch" || domainName === "")
+        else if (domainName === "wiehoch")
         {
             // Add a listener for the click event. Display the elevation for the LatLng of
             // the click inside the infowindow.
@@ -162,7 +162,7 @@
           console.log("Diff between elevation: " + elevationDifference);
 
           var distance = google.maps.geometry.spherical.computeDistanceBetween(pos1, pos2);
-          console.log("Distance between points:" + distance.toFixed(0));
+          console.log("Distance between points:" + distance);
 
           console.log(elevationDifference / distance);
           var gradient = Math.atan(elevationDifference / distance);
@@ -222,7 +222,7 @@
               elevationSecondPoint = height;
           }
 
-          displayMarker(latLng, height + "m");
+          displayMarker(latLng, height.toFixed(0) + "m");
           calculateAndDisplayGradient();
       }
 
@@ -284,7 +284,7 @@
               // Retrieve the first result
               if (results[0])
               {
-                callbackForElevation(location, results[0].elevation.toFixed(0));
+                callbackForElevation(location, results[0].elevation);
               } else
               {
                 console.log('No results found');
