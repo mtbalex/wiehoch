@@ -45,8 +45,10 @@
         {
             // Add a listener for the click event
             map.addListener('click', handleMapClickEvent);
+            getCurrentLocationAndExecute(centerMap);
+
         }
-        else if (domainName === "wiehoch")
+        else if (domainName === "wiehoch" || domainName === "")
         {
             // Add a listener for the click event. Display the elevation for the LatLng of
             // the click inside the infowindow.
@@ -253,14 +255,20 @@
           //infowindow.open(map, marker);
       }
 
-      function centerMapAndDisplayElevationForPosition(position) {
-        console.log(position);
-        console.log("showPosition: Latitude: " + position.coords.latitude + " Longitude: " + position.coords.longitude);
+      function centerMap(position)
+      {
+          console.log(position);
+          console.log("showPosition: Latitude: " + position.coords.latitude + " Longitude: " + position.coords.longitude);
 
-        //Center map on current position
+          //Center map on current position
+          var latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+          map.setCenter(latLng);
+      }
+
+      function centerMapAndDisplayElevationForPosition(position)
+      {
+        centerMap(position);
         var latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-        map.setCenter(latLng);
-
         getElevationForPosition(latLng, elevator, displayMarker);
       }
 
