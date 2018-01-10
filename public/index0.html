@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Elevation service</title>
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <script>
+      "use strict";
+
+      var map;
+
+      var poly;
+      var elevationFirstPoint;
+      var elevationSecondPoint;
+
+      function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 16,
+          center: {lat: 48.783762, lng: 9.181620},
+          mapTypeId: 'terrain',
+          scaleControl: true,
+          mapTypeControlOptions: {
+              mapTypeIds: ['oa_map', 'oa_map_winter', google.maps.MapTypeId.ROADMAP]
+          }
+        });
+
+        map.mapTypes.set( 'oa_map',        oax.api.tilelayer( 'oa_map' ) );
+        map.mapTypes.set( 'oa_map_winter', oax.api.tilelayer( 'oa_map_winter' ) );
+
+        oax.api.showCopyright( map );  // Mandatory
+
+
+
+        var elevator = new google.maps.ElevationService;
+
+
+	    var pathArray = window.location.hostname.split( '.' );
+        console.log(pathArray);
+        var domainName = pathArray[0];
+        console.log(domainName);
+
+
+        if (domainName === "wiesteil" || domainName === "")
+        {
+            // Add a listener for the click event
+            map.addListener('click', createHandleMapClickEvent(elevator));
+            getCurrentLocationAndExecute(createCenterMap(map));
+
+        }
+        else if (domainName === "wiehoch")
+        {
+            // Add a listener for the click event. Display the elevation for the LatLng of
+            // the click inside the infowindow.
+            map.addListener('click', function(event) {
+              getElevationForPosition(event.latLng, elevator, createDisplayMarkerFromHeight(map));
+            });
+            getCurrentLocationAndExecute(createCenterMapAndDisplayElevationForPosition(map, elevator));
+        }
+        else
+        {
+
+        }
+      }
+
+      // Converts from degrees to radians.
+      Math.radians = function(degrees) {
+          return degrees * Math.PI / 180;
+      };
+
+      // Converts from radians to degrees.
+      Math.degrees = function(radians) {
+          return radians * 180 / Math.PI;
+      };
+
+      function createHandleMapClickEvent(elevator)
+      {
+          return function handleMapClickEvent(event)
+          {
+              if (typeof poly !== 'undefined')
+              {
+                  //Create a new poly line if the old one has a length of 2 points
+                  var path = poly.getPath();
+                  if (path.getLength() == 2)
+                  {
+                      createPolyLine();
+                  }
+              }
+              //Create a new poly line if we don't have one at all
+              else
+              {
+                  createPolyLine();
+              }
+
+              //Add the clicked point to the poly line
+              addPointToPolyLine(event);
+
+              //Get elevation of the position and display it on the point
+              getElevationForPosition(event.latLng, elevator, handleFoundElevation);
+          }
+      }
+
+      function createPolyLine()
+      {
+
+
+           //var symbolTwo = {
+             //path: google.maps.SymbolPath.FORWARD_OPEN_ARROW,
+               //strokeOpacity: 1,
+               //scale:2.4,
+
+           //};
+
+          poly = new google.maps.Polyline({
+              strokeColor: '#000000',
+              strokeOpacity: 0.4,
+              strokeWeight: 1.5,
+              //icons: [
+            //      {
+            //          icon: symbolTwo,
+            //          offset: '30%',
+            //          anchor: new google.maps.Point(100,80),
+            //          repeat: '100px'
+            //      }
+              //]
+          });
+          poly.setMap(map);
+      }
+
+      function addPointToPolyLine(event)
+      {
+          var path = poly.getPath();
+
+          path.push(event.latLng);
+
+          if (path.getLength() == 2)
+          {
+              //Now we have a path with two points we can execute on
+              //console.log("Distance between points:" + google.maps.geometry.spherical.computeDistanceBetween(path.getAt(0), path.getAt(1)).toFixed(0) + "m");
+          }
+      }
+
+      function calculateAndDisplayGradient()
+      {
+          var path = poly.getPath();
+          console.log("calculateGradient::path.getLength():" + path.getLength());
+          //console.log(typeof elevationFirstPoint);
+          //console.log(typeof elevationSecondPoint);
+
+          if (typeof elevationFirstPoint !== 'undefined' && typeof elevationSecondPoint !== 'undefined' && path.getLength() == 2)
+          {
+              var gradientInDegrees = calculateGradient(path.getAt(0), path.getAt(1));
+
+              var locationInBetween = new google.maps.LatLng(
+                    (path.getAt(0).lat() + path.getAt(1).lat()) / 2.00000,
+                    (path.getAt(0).lng() + path.getAt(1).lng()) / 2.00000);
+
+              displayGradient(locationInBetween, gradientInDegrees);
+          }
+      }
+
+      function calculateGradient(pos1, pos2)
+      {
+          var elevationDifference = Math.abs(elevationFirstPoint - elevationSecondPoint);
+          console.log("Diff between elevation: " + elevationDifference);
+
+          var distance = google.maps.geometry.spherical.computeDistanceBetween(pos1, pos2);
+          console.log("Distance between points:" + distance);
+
+          console.log(elevationDifference / distance);
+          var gradient = Math.atan(elevationDifference / distance);
+          var gradientInDegrees = Math.degrees(gradient).toFixed(1);
+          console.log("Gradient in degrees: " + gradientInDegrees);
+          return gradientInDegrees;
+      }
+
+      function displayGradient(position, gradientInDegrees)
+      {
+          var polyMarker = new google.maps.Marker({
+              position: position,
+              map: map,
+              visible: true,
+              icon: {
+                path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+                scale: 0.1,
+                //labelOrigin: new google.maps.Point(120, 120),
+                anchor: new google.maps.Point(120, 120),
+                //strokeOpacity: 30,
+                //strokeColor: 'white',
+                //fillOpacity: 30,
+                //fillColor: 'red'
+              },
+              label: {
+                  text: gradientInDegrees + "°",
+                  fontWeight: 'bold',
+                  fontSize: '12px',
+                  color: 'black'
+              },
+              //opacity: 0.2,
+          });
+      }
+
+      function getCurrentLocationAndExecute(callbackForLocation) {
+        console.log("getLocation");
+        if (navigator.geolocation) {
+                var geo_options = {
+                                enableHighAccuracy: true,
+                                timeout: Infinity,
+                                maximumAge: 0 };
+            navigator.geolocation.getCurrentPosition(callbackForLocation, error, geo_options);
+        } else {
+            alert("Geolocation is not supported by this browser.");
+        }
+      }
+
+      function handleFoundElevation(latLng, height)
+      {
+          var path = poly.getPath();
+          if (path.getLength() == 1)
+          {
+              elevationFirstPoint = height;
+          }
+          else
+          {
+              elevationSecondPoint = height;
+          }
+
+          displayMarker(latLng, height.toFixed(0) + "m");
+
+          if (path.getLength() == 2)
+          {
+              calculateAndDisplayGradient();
+          }
+      }
+
+      function createDisplayMarkerFromHeight(map)
+      {
+          return function (latLng, height)
+          {
+              displayMarker(map, latLng, height.toFixed(0) + "m");
+          }
+      }
+
+      function createDisplayMarker(map)
+      {
+          return function (latLng, label)
+          {
+              displayMarker(map, latLng, label);
+          }
+      }
+
+      function displayMarker(latLng, label)
+      {
+          console.log("displayMarker::label:" + label);
+          //var infowindow = new google.maps.InfoWindow({
+          //content: label.toFixed(0).toString() + "m"
+          //});
+
+          var marker = new google.maps.Marker({
+              position: latLng,
+              icon: {
+                path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+                scale: 2,
+                labelOrigin: new google.maps.Point(0, -8)
+              },
+              map: map,
+              label: {
+                  text: label.toString(),
+                  fontWeight: 'bold',
+                  fontSize: '12px',
+                  color: 'black'
+              }
+          });
+
+          marker.addListener('click', function() {
+             marker.setMap(null);
+           });
+          //infowindow.open(map, marker);
+      }
+
+      function createCenterMap(map)
+      {
+          return function centerMap(position)
+          {
+              console.log(position);
+              console.log("showPosition: Latitude: " + position.coords.latitude + " Longitude: " + position.coords.longitude);
+
+              //Center map on current position
+              var latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+              map.setCenter(latLng);
+          }
+      }
+
+
+
+      function createCenterMapAndDisplayElevationForPosition(map, elevator)
+      {
+          return function (position)
+          {
+              createCenterMap(map).centerMap(position);
+              var latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+              getElevationForPosition(latLng, elevator, createDisplayMarkerFromHeight(map));
+          }
+      }
+
+      function getElevationForPosition(location, elevator, callbackForElevation)
+      {
+          elevator.getElevationForLocations({
+            'locations': [location]
+          },
+          function(results, status)
+          {
+            if (status === 'OK')
+            {
+              // Retrieve the first result
+              if (results[0])
+              {
+                callbackForElevation(location, results[0].elevation);
+              } else
+              {
+                console.log('No results found');
+              }
+            } else
+            {
+              console.log('Elevation service failed due to: ' + status);
+            }
+          });
+      }
+
+      function error(err) {
+          alert('Attempt to get location failed: ' + err.message);
+      };
+    </script>
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAbddUe14N8kQMuOy7ddrB1J8imDVfBay8&callback=initMap">
+    </script>
+    <!-- load Outdooractive Javascript API -->
+    <script type="text/javascript"
+            src="//www.outdooractive.com/alpportal/oax_head.js?build=mini&proj=api-dev-oa&key=yourtest-outdoora-ctiveapi&lang=en&use_gmap=1&gmapclientid=gme-alpsteintourismus"></script>
+
+  </body>
+</html>
