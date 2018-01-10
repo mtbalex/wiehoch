@@ -36,18 +36,17 @@
           mapTypeId: 'terrain',
           scaleControl: true,
           mapTypeControlOptions: {
-              mapTypeIds: ['oa_map', 'oa_map_winter', 'oa_hybrid',  google.maps.MapTypeId.ROADMAP,google.maps.MapTypeId.HYBRID,google.maps.MapTypeId.SATELLITE,google.maps.MapTypeId.TERRAIN],
-              style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
+              mapTypeIds: ['oa_map', 'oa_map_winter', 'oa_hybrid','oa_topo',  google.maps.MapTypeId.ROADMAP,google.maps.MapTypeId.HYBRID,google.maps.MapTypeId.SATELLITE,google.maps.MapTypeId.TERRAIN]
+              //style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
           }
         });
 
         map.mapTypes.set( 'oa_map',        oax.api.tilelayer( 'oa_map' ) );
         map.mapTypes.set( 'oa_map_winter', oax.api.tilelayer( 'oa_map_winter' ) );
         map.mapTypes.set( 'oa_hybrid',     oax.api.tilelayer( 'oa_hybrid' ) );
+        map.mapTypes.set( 'oa_topo',       oax.api.tilelayer( 'oa_topo' ) );
 
         oax.api.showCopyright( map );  // Mandatory
-
-
 
         var elevator = new google.maps.ElevationService;
 
