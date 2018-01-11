@@ -17,6 +17,15 @@
         padding: 0;
       }
     </style>
+
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAbddUe14N8kQMuOy7ddrB1J8imDVfBay8&callback=initMap">
+    </script>
+    <!-- load Outdooractive Javascript API -->
+    <script type="text/javascript"
+            src="https://www.outdooractive.com/alpportal/oax_head.js?build=mini&proj=api-dev-oa&key=yourtest-outdoora-ctiveapi&lang=en&use_gmap=1&gmapclientid=gme-alpsteintourismus"></script>
+
+
   </head>
   <body>
     <div id="map"></div>
@@ -256,7 +265,7 @@
       {
           return function (latLng, height)
           {
-              displayMarker(map, latLng, height.toFixed(0) + "m");
+              displayMarker(latLng, height.toFixed(0) + "m");
           }
       }
 
@@ -264,12 +273,13 @@
       {
           return function (latLng, label)
           {
-              displayMarker(map, latLng, label);
+              displayMarker(latLng, label);
           }
       }
 
       function displayMarker(latLng, label)
       {
+          console.log("displayMarker::latLng:" + latLng);
           console.log("displayMarker::label:" + label);
           //var infowindow = new google.maps.InfoWindow({
           //content: label.toFixed(0).toString() + "m"
@@ -316,7 +326,8 @@
       {
           return function (position)
           {
-              createCenterMap(map).centerMap(position);
+              var centerMap = createCenterMap(map);
+              centerMap(position);
               var latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
               getElevationForPosition(latLng, elevator, createDisplayMarkerFromHeight(map));
           }
@@ -350,12 +361,5 @@
           alert('Attempt to get location failed: ' + err.message);
       };
     </script>
-    <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAbddUe14N8kQMuOy7ddrB1J8imDVfBay8&callback=initMap">
-    </script>
-    <!-- load Outdooractive Javascript API -->
-    <script type="text/javascript"
-            src="https://www.outdooractive.com/alpportal/oax_head.js?build=mini&proj=api-dev-oa&key=yourtest-outdoora-ctiveapi&lang=en&use_gmap=1&gmapclientid=gme-alpsteintourismus"></script>
-
   </body>
 </html>
