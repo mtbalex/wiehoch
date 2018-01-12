@@ -71,7 +71,7 @@
         {
             // Add a listener for the click event
             map.addListener('click', createHandleMapClickEvent(elevator));
-            getCurrentLocationAndExecute(createCenterMap(map));
+            getCurrentLocationAndExecute(centerMap);
 
         }
         else if (domainName === "wiehoch")
@@ -79,9 +79,9 @@
             // Add a listener for the click event. Display the elevation for the LatLng of
             // the click inside the infowindow.
             map.addListener('click', function(event) {
-              getElevationForPosition(event.latLng, elevator, createDisplayMarkerFromHeight(map));
+              getElevationForPosition(event.latLng, elevator, displayMarkerFromHeight);
             });
-            getCurrentLocationAndExecute(createCenterMapAndDisplayElevationForPosition(map, elevator));
+            getCurrentLocationAndExecute(createCenterMapAndDisplayElevationForPosition(elevator));
         }
         else
         {
@@ -259,20 +259,9 @@
           }
       }
 
-      function createDisplayMarkerFromHeight(map)
+      function displayMarkerFromHeight(latLng, height)
       {
-          return function (latLng, height)
-          {
-              displayMarker(latLng, height.toFixed(0) + "m");
-          }
-      }
-
-      function createDisplayMarker(map)
-      {
-          return function (latLng, label)
-          {
-              displayMarker(latLng, label);
-          }
+          displayMarker(latLng, height.toFixed(0) + "m");
       }
 
       function displayMarker(latLng, label)
@@ -305,29 +294,23 @@
           //infowindow.open(map, marker);
       }
 
-      function createCenterMap(map)
+      function centerMap(position)
       {
-          return function centerMap(position)
-          {
-              console.log(position);
-              console.log("showPosition: Latitude: " + position.coords.latitude + " Longitude: " + position.coords.longitude);
+          console.log(position);
+          console.log("showPosition: Latitude: " + position.coords.latitude + " Longitude: " + position.coords.longitude);
 
-              //Center map on current position
-              var latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-              map.setCenter(latLng);
-          }
+          //Center map on current position
+          var latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+          map.setCenter(latLng);
       }
 
-
-
-      function createCenterMapAndDisplayElevationForPosition(map, elevator)
+      function createCenterMapAndDisplayElevationForPosition(elevator)
       {
           return function (position)
           {
-              var centerMap = createCenterMap(map);
               centerMap(position);
               var latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-              getElevationForPosition(latLng, elevator, createDisplayMarkerFromHeight(map));
+              getElevationForPosition(latLng, elevator, displayMarkerFromHeight);
           }
       }
 
