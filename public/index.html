@@ -69,8 +69,7 @@
 
         if (domainName === "wiesteil" || domainName === "")
         {
-            // Add a listener for the click event
-            map.addListener('click', createHandleMapClickEvent(elevator));
+            map.addListener('click', createHandleMapClickEventForTwoPoints(elevator));
             getCurrentLocationAndExecute(centerMap);
 
         }
@@ -82,6 +81,11 @@
               getElevationForPosition(event.latLng, elevator, displayMarkerFromHeight);
             });
             getCurrentLocationAndExecute(createCenterMapAndDisplayElevationForPosition(elevator));
+        }
+        else if (domainName === "wieweit" )
+        {
+            map.addListener('click', createHandleMapClickEventForPolyLine(elevator));
+            //getCurrentLocationAndExecute(centerMap);
         }
         else
         {
@@ -99,9 +103,9 @@
           return radians * 180 / Math.PI;
       };
 
-      function createHandleMapClickEvent(elevator)
+      function createHandleMapClickEventForTwoPoints(elevator)
       {
-          return function handleMapClickEvent(event)
+          return function handleClickEventForTwoPoints(event)
           {
               if (typeof poly !== 'undefined')
               {
@@ -109,27 +113,51 @@
                   var path = poly.getPath();
                   if (path.getLength() == 2)
                   {
-                      createPolyLine();
+                      poly = createPolyLine();
                   }
               }
               //Create a new poly line if we don't have one at all
               else
               {
-                  createPolyLine();
+                  poly = createPolyLine();
               }
 
               //Add the clicked point to the poly line
-              addPointToPolyLine(event);
+              addPointToPolyLine(event, poly);
 
               //Get elevation of the position and display it on the point
               getElevationForPosition(event.latLng, elevator, handleFoundElevation);
           }
       }
 
+      function createHandleMapClickEventForPolyLine(elevator)
+      {
+          console.log("Creating createHandleMapClickEventForPolyLine");
+          var waypointPolyLine;
+          var arrayWithHeights = [];
+          return function handleClickEventForPolyLine(event)
+          {
+              console.log("handleClickEventForPolyLine");
+              if (typeof waypointPolyLine === 'undefined')
+              {
+                  console.log("Creating waypointPolyLine");
+                  waypointPolyLine = createPolyLine();
+              }
+              else
+              {
+                  console.log("Adding to waypointPolyLine");
+
+                  //Add the clicked point to the poly line
+                  addPointToPolyLine(event, waypointPolyLine);
+
+                  //Get elevation of the position and display it on the point
+                  getElevationForPosition(event.latLng, elevator, createAddMarkerFunction(waypointPolyLine, arrayWithHeights));
+              }
+          }
+      }
+
       function createPolyLine()
       {
-
-
            //var symbolTwo = {
              //path: google.maps.SymbolPath.FORWARD_OPEN_ARROW,
                //strokeOpacity: 1,
@@ -137,7 +165,7 @@
 
            //};
 
-          poly = new google.maps.Polyline({
+          var polyLine = new google.maps.Polyline({
               strokeColor: '#000000',
               strokeOpacity: 0.4,
               strokeWeight: 1.5,
@@ -150,20 +178,39 @@
             //      }
               //]
           });
-          poly.setMap(map);
+          polyLine.setMap(map);
+          return polyLine;
       }
 
-      function addPointToPolyLine(event)
+      function addPointToPolyLine(event, polyLine)
       {
-          var path = poly.getPath();
+          var path = polyLine.getPath();
 
           path.push(event.latLng);
+      }
 
-          if (path.getLength() == 2)
+      function getElevationForPosition(location, elevator, callbackForElevation)
+      {
+          elevator.getElevationForLocations({
+            'locations': [location]
+          },
+          function(results, status)
           {
-              //Now we have a path with two points we can execute on
-              //console.log("Distance between points:" + google.maps.geometry.spherical.computeDistanceBetween(path.getAt(0), path.getAt(1)).toFixed(0) + "m");
-          }
+            if (status === 'OK')
+            {
+              // Retrieve the first result
+              if (results[0])
+              {
+                callbackForElevation(location, results[0].elevation);
+              } else
+              {
+                console.log('No results found');
+              }
+            } else
+            {
+              console.log('Elevation service failed due to: ' + status);
+            }
+          });
       }
 
       function calculateAndDisplayGradient()
@@ -175,24 +222,34 @@
 
           if (typeof elevationFirstPoint !== 'undefined' && typeof elevationSecondPoint !== 'undefined' && path.getLength() == 2)
           {
-              var gradientInDegrees = calculateGradient(path.getAt(0), path.getAt(1));
+              var elevationDifference = calculateElevationDiff(elevationFirstPoint, elevationSecondPoint);
+              var distance = calculateDistance(path.getAt(0), path.getAt(1));
+              var gradientInDegrees = calculateGradient(distance, Math.abs(elevationDifference));
 
               var locationInBetween = new google.maps.LatLng(
                     (path.getAt(0).lat() + path.getAt(1).lat()) / 2.00000,
                     (path.getAt(0).lng() + path.getAt(1).lng()) / 2.00000);
 
-              displayGradient(locationInBetween, gradientInDegrees);
+              displayGradient(locationInBetween, gradientInDegrees, distance.toFixed(0), elevationDifference.toFixed(0));
           }
       }
 
-      function calculateGradient(pos1, pos2)
+      function calculateDistance(pos1, pos2)
       {
-          var elevationDifference = Math.abs(elevationFirstPoint - elevationSecondPoint);
-          console.log("Diff between elevation: " + elevationDifference);
-
           var distance = google.maps.geometry.spherical.computeDistanceBetween(pos1, pos2);
           console.log("Distance between points:" + distance);
+          return distance
+      }
 
+      function calculateElevationDiff(elevationFirstPoint, elevationSecondPoint)
+      {
+          var elevationDifference =  elevationSecondPoint - elevationFirstPoint;
+          console.log("Diff between elevation: " + elevationDifference);
+          return elevationDifference
+      }
+
+      function calculateGradient(distance, elevationDifference)
+      {
           console.log(elevationDifference / distance);
           var gradient = Math.atan(elevationDifference / distance);
           var gradientInDegrees = Math.degrees(gradient).toFixed(1);
@@ -200,7 +257,7 @@
           return gradientInDegrees;
       }
 
-      function displayGradient(position, gradientInDegrees)
+      function displayGradient(position, gradientInDegrees, distance, elevationDifference)
       {
           var polyMarker = new google.maps.Marker({
               position: position,
@@ -217,7 +274,9 @@
                 //fillColor: 'red'
               },
               label: {
-                  text: gradientInDegrees + "°",
+                  text: gradientInDegrees + "°, \u2194 " + distance + "m, \u2195 " + elevationDifference + "m",
+//                    text: gradientInDegrees + "°, \u21D4 " + distance + "m, \u21D5 " + elevationDifference + "m",
+
                   fontWeight: 'bold',
                   fontSize: '12px',
                   color: 'black'
@@ -237,6 +296,50 @@
         } else {
             alert("Geolocation is not supported by this browser.");
         }
+      }
+
+      function createAddMarkerFunction(waypointPolyLine, arrayWithHeights)
+      {
+          return function addMarkerWithHeight(latLng, height)
+          {
+              displayMarker(latLng, height.toFixed(0) + "m");
+              arrayWithHeights.push(height);
+              console.log(waypointPolyLine.getPath().length);
+              console.log(arrayWithHeights.length);
+
+              var previousHeight;
+
+              for (var i=0; i<arrayWithHeights.length; i++) {
+                  var height = arrayWithHeights[i];
+
+                  console.log(height);
+                  if (previousHeight === 'undefined')
+                  {
+
+                  }
+                  else
+                  {
+                      console.log(height - previousHeight);
+                      previousHeight = height;
+                  }
+              }
+
+                waypointPolyLine.getPath().forEach(function(pathEntry) {
+                    console.log(entry);
+                });
+
+              /*array_of_numbers.forEach(function(current_value, index, initial_array) {
+                  if (current_value % 2) {
+                      console.log('odd');
+                  }
+                  else {
+                      console.log('even');
+                  }
+              });*/
+              //https://appendto.com/2016/05/iterating-javascript-arrays-with-array-foreach/
+
+
+          }
       }
 
       function handleFoundElevation(latLng, height)
@@ -312,30 +415,6 @@
               var latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
               getElevationForPosition(latLng, elevator, displayMarkerFromHeight);
           }
-      }
-
-      function getElevationForPosition(location, elevator, callbackForElevation)
-      {
-          elevator.getElevationForLocations({
-            'locations': [location]
-          },
-          function(results, status)
-          {
-            if (status === 'OK')
-            {
-              // Retrieve the first result
-              if (results[0])
-              {
-                callbackForElevation(location, results[0].elevation);
-              } else
-              {
-                console.log('No results found');
-              }
-            } else
-            {
-              console.log('Elevation service failed due to: ' + status);
-            }
-          });
       }
 
       function error(err) {
