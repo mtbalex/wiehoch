@@ -404,9 +404,6 @@
       {
           console.log("displayMarker::latLng:" + latLng);
           console.log("displayMarker::label:" + label);
-          //var infowindow = new google.maps.InfoWindow({
-          //content: label.toFixed(0).toString() + "m"
-          //});
 
           var marker = new google.maps.Marker({
               position: latLng,
@@ -424,13 +421,15 @@
               }
           });
 
-          marker.addListener('click', function() {
+          marker.addListener('click', function()
+          {
              marker.setMap(null);
            });
-
-            infoWindow.open(map, marker);
-
-          //infowindow.open(map, marker);
+           
+           if (infoWindow.getContent() === undefined)
+           {
+               infoWindow.open(map, marker);
+           }
       }
 
       function centerMap(position)
