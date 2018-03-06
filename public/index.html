@@ -88,7 +88,7 @@
         {
             infoWindow = new google.maps.InfoWindow();
             map.addListener('click', createHandleMapClickEventForPolyLine(elevator));
-            //getCurrentLocationAndExecute(centerMap);
+            getCurrentLocationAndExecute(centerMap);
         }
         else
         {
@@ -329,30 +329,36 @@
                 displayGradient(locationInBetween, gradientInDegrees, distance.toFixed(0), elevationDifference.toFixed(0));
             }
 
-
-            var previousHeight;
-
-            for (var i=0; i<arrayWithHeights.length; i++) {
+            let elevationPositive = 0;
+            let elevationNegative = 0;
+            for (var i=1; i < arrayWithHeights.length; i++) 
+            {
+                var previousHeight = arrayWithHeights[i-1];
                 var height = arrayWithHeights[i];
-
-                //console.log(height);
-                if (previousHeight === 'undefined')
+                var diff = height - previousHeight;
+                if (diff < 0)
                 {
-
+                    elevationNegative += diff;
                 }
                 else
                 {
-                    //console.log(height - previousHeight);
-                    previousHeight = height;
+                    elevationPositive += diff;
                 }
             }
+            console.log("elpos:" + elevationPositive.toString());
+            console.log("elneg:" + elevationNegative.toString());
+
 
             var totalDistance = 0;
-            waypointPolyLine.getPath().forEach(function(pathEntry) {
-                //console.log(entry);
-            });
+            for (var i=1; i < waypointPolyLine.getPath().getLength(); i++) 
+            {
+                totalDistance += calculateDistance(waypointPolyLine.getPath().getAt(i-1), waypointPolyLine.getPath().getAt(i));
+            }
 
-            infoWindow.setContent(arrayWithHeights.length.toString());
+            infoWindow.setContent(`Uphill: ${elevationPositive.toFixed(0)}m` + '<br>'
+                                + `Downhill: ${elevationNegative.toFixed(0)}m` + '<br>'
+                                + `Distance: ${totalDistance.toFixed(0)}m` + '<br>'
+                                );
 
 
               /*array_of_numbers.forEach(function(current_value, index, initial_array) {
