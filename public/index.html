@@ -87,6 +87,8 @@
         else if (domainName === "wieweit"  || domainName === "")
         {
             infoWindow = new google.maps.InfoWindow();
+            infoWindow.setOptions({pixelOffset:new google.maps.Size(0, -20)});
+
             map.addListener('click', createHandleMapClickEventForPolyLine(elevator));
             getCurrentLocationAndExecute(centerMap);
         }
