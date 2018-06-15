@@ -20,7 +20,7 @@
 
     <!-- load Outdooractive Javascript API -->
     <script type="text/javascript"
-            src="//www.outdooractive.com/alpportal/oam_head.js?proj=api-dev-oa&amp;key=yourtest-outdoora-ctiveapi&amp;lang=en&amp;build=mini"></script>
+            src="https://www.outdooractive.com/alpportal/oam_head.js?proj=api-dev-oa&amp;key=yourtest-outdoora-ctiveapi&amp;lang=en&amp;build=mini"></script>
 
 
 
@@ -36,23 +36,30 @@
     <div id="mapid" style="width: 100%; height: 400px"></div>
 
     <script type="text/javascript">
-      var osm = L.tileLayer('http://a.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      var osm = L.tileLayer(
+        'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+        // 'http://a.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png'
+        //'http://a.tile.thunderforest.com/outdoors/{z}/{x}/{y}.png?apikey=7c352c8ff1244dd8b732e349e0b0fe8d'
+        , {
           attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
           maxZoom: 18
       });
 
       var oa_summer = oam.api.tilelayer(L, 'oa_map');
       var oa_winter = oam.api.tilelayer(L, 'oa_map_winter');
+      var oa_hybrid = oam.api.tilelayer(L, 'oa_map_hybrid');
+
 
       var mymap = L.map('mapid', {
           center: [47.546, 10.292],
           zoom:   13,
-          layers: [oa_summer, oa_winter, osm]
+          layers: [osm]
       });
 
       L.control.layers({
           "Outdooractive Summer": oa_summer,
           "Outdooractive Winter": oa_winter,
+          "Outdooractive Hybrid": oa_hybrid,
           "OpenStreetMap": osm
       }).addTo(mymap);
     </script>

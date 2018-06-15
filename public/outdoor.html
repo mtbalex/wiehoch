@@ -20,7 +20,7 @@
 
         <!-- load Outdooractive Javascript API -->
         <script type="text/javascript"
-                src="//www.outdooractive.com/alpportal/oam_head.js?proj=api-dev-oa&amp;key=yourtest-outdoora-ctiveapi&amp;lang=en&amp;build=mini"></script>
+                src="https://www.outdooractive.com/alpportal/oam_head.js?proj=api-dev-oa&amp;key=yourtest-outdoora-ctiveapi&amp;lang=en&amp;build=mini"></script>
 
   </head>
 
@@ -31,7 +31,7 @@
         var mymap = L.map('mapid').setView([48.783762, 9.181620], 13);
 
 //http://a.tile.openstreetmap.org/{z}/{x}/{y}.png
-//http://a.tile.opencyclemap.org/cycle/${z}/${x}/${y}.png
+//http://a.tile.opencyclemap.org/cycle/{z}/{x}/{y}.png
 
         var osm = L.tileLayer('http://a.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
