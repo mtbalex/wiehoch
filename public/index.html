@@ -100,12 +100,12 @@
         console.log(domainName);
 
 
-        if (domainName === "wiesteil")
+        if (domainName === "wiesteil" || domainName === "")
         {
             map.addListener('click', createHandleMapClickEventForTwoPoints(elevator));
             getCurrentLocationAndExecute(centerMap);
         }
-        else if (domainName === "wiehoch" || domainName === "")
+        else if (domainName === "wiehoch")
         {
             map.addListener('click', createDisplayElevationForEventAndPanToIt(elevator));
             getCurrentLocationAndExecute(createDisplayElevationForPositionAndPanToIt(elevator));
@@ -229,6 +229,10 @@
               //]
           });
           polyLine.setMap(map);
+          polyLine.addListener('click', function()
+          {
+            polyLine.setMap(null);
+          });
           return polyLine;
       }
 
@@ -332,6 +336,11 @@
                   color: 'black'
               },
               //opacity: 0.2,
+          });
+
+          polyMarker.addListener('click', function()
+          {
+            polyMarker.setMap(null);
           });
       }
 
