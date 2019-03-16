@@ -104,18 +104,13 @@
         {
             map.addListener('click', createHandleMapClickEventForTwoPoints(elevator));
             getCurrentLocationAndExecute(centerMap);
-
         }
-        else if (domainName === "wiehoch")
+        else if (domainName === "wiehoch" || domainName === "")
         {
-            // Add a listener for the click event. Display the elevation for the LatLng of
-            // the click inside the infowindow.
-            map.addListener('click', function(event) {
-              getElevationForPosition(event.latLng, elevator, displayMarkerFromHeight);
-            });
-            getCurrentLocationAndExecute(createCenterMapAndDisplayElevationForPosition(elevator));
+            map.addListener('click', createDisplayElevationForEventAndPanToIt(elevator));
+            getCurrentLocationAndExecute(createDisplayElevationForPositionAndPanToIt(elevator));
         }
-        else if (domainName === "wieweit"  || domainName === "")
+        else if (domainName === "wieweit")
         {
             infoWindow = new google.maps.InfoWindow();
             infoWindow.setOptions({pixelOffset:new google.maps.Size(0, -20)});
@@ -138,6 +133,25 @@
       Math.degrees = function(radians) {
           return radians * 180 / Math.PI;
       };
+
+      function createDisplayElevationForEventAndPanToIt(elevator)
+      {
+          return function (event)
+          {
+            getElevationForPosition(event.latLng, elevator, displayMarkerFromHeight);
+            map.panTo(event.latLng)
+          }
+      }
+
+      function createDisplayElevationForPositionAndPanToIt(elevator)
+      {
+          return function (position)
+          {
+              var latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+              getElevationForPosition(latLng, elevator, displayMarkerFromHeight);
+              map.panTo(latLng)
+          }
+      }
 
       function createHandleMapClickEventForTwoPoints(elevator)
       {
@@ -462,7 +476,7 @@
              marker.setMap(null);
            });
            
-           if (infoWindow !== 'undefined')
+           if (typeof infoWindow !== 'undefined')
            {
                infoWindow.open(map, marker);
            }
@@ -477,16 +491,6 @@
           //Center map on current position
           var latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
           map.setCenter(latLng);
-      }
-
-      function createCenterMapAndDisplayElevationForPosition(elevator)
-      {
-          return function (position)
-          {
-              centerMap(position);
-              var latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-              getElevationForPosition(latLng, elevator, displayMarkerFromHeight);
-          }
       }
 
       function error(err) {
