@@ -28,19 +28,27 @@
   <body>
     <div id="map"></div>
     <script>
-      "use strict";
+        "use strict";
 
-      var map;
+        var map;
 
-      var poly;
-      var elevationFirstPoint;
-      var elevationSecondPoint;
+        var poly;
+        var elevationFirstPoint;
+        var elevationSecondPoint;
 
-      var infoWindow;
+        var infoWindow;
 
-      function initMap() {
-        map = new google.maps.Map(document.getElementById('map'), {
-          zoom: 16,
+        function initMap() {
+            var urlParams = new URLSearchParams(location.search);
+            console.log(urlParams.toString())
+          let zoom = 16;
+          if (urlParams.has('zoom'))
+          {
+            zoom = parseInt(urlParams.get('zoom'));
+          }
+
+          map = new google.maps.Map(document.getElementById('map'), {
+          zoom: zoom,
           center: {lat: 48.783762, lng: 9.181620},
           mapTypeId: 'terrain',
           scaleControl: true,
@@ -99,13 +107,17 @@
         var domainName = pathArray[0];
         console.log(domainName);
 
-        var urlParams = new URLSearchParams(location.search);
-        console.log(urlParams.toString())
+
 
         map.addListener('dragend', function() {
             urlParams.set('lat', map.getCenter().lat());
             urlParams.set('lng', map.getCenter().lng());
-            window.history.replaceState({}, '', `${location.pathname}?${urlParams}`);
+            window.history.pushState({}, '', `${location.pathname}?${urlParams}`);
+        });
+
+        map.addListener('zoom_changed', function() {
+            urlParams.set('zoom', map.getZoom());
+            window.history.pushState({}, '', `${location.pathname}?${urlParams}`);
         });
 
         let functionToExecutionOnCurrentLocation;
