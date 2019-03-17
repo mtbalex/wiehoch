@@ -99,16 +99,29 @@
         var domainName = pathArray[0];
         console.log(domainName);
 
+        var urlParams = new URLSearchParams(location.search);
+        console.log(urlParams.toString())
 
-        if (domainName === "wiesteil" || domainName === "")
+        map.addListener('dragend', function() {
+            urlParams.set('lat', map.getCenter().lat());
+            urlParams.set('lng', map.getCenter().lng());
+            window.history.replaceState({}, '', `${location.pathname}?${urlParams}`);
+        });
+
+        let functionToExecutionOnCurrentLocation;
+        if (domainName === "wiesteil")
         {
             map.addListener('click', createHandleMapClickEventForTwoPoints(elevator));
-            getCurrentLocationAndExecute(centerMap);
+            functionToExecutionOnCurrentLocation = centerMap;
+            //getCurrentLocationAndExecute(centerMap);
         }
-        else if (domainName === "wiehoch")
+        else if (domainName === "wiehoch" || domainName === "")
         {
             map.addListener('click', createDisplayElevationForEventAndPanToIt(elevator));
-            getCurrentLocationAndExecute(createDisplayElevationForPositionAndPanToIt(elevator));
+            //getCurrentLocationAndExecute(createDisplayElevationForPositionAndPanToIt(elevator));
+            functionToExecutionOnCurrentLocation = createDisplayElevationForPositionAndPanToIt(elevator);
+
+            //Update URL params on autopan when clicked
         }
         else if (domainName === "wieweit")
         {
@@ -116,11 +129,24 @@
             infoWindow.setOptions({pixelOffset:new google.maps.Size(0, -20)});
 
             map.addListener('click', createHandleMapClickEventForPolyLine(elevator));
-            getCurrentLocationAndExecute(centerMap);
+            functionToExecutionOnCurrentLocation = centerMap;
+            //getCurrentLocationAndExecute(centerMap);
         }
         else
         {
 
+        }
+
+        if (urlParams.has('lat') && urlParams.has('lng'))
+        {
+            var latLng = new google.maps.LatLng(urlParams.get('lat'), urlParams.get('lng'));
+            map.setCenter(latLng);
+
+            //Display height in case of wiehoch
+        }
+        else
+        {
+            getCurrentLocationAndExecute(functionToExecutionOnCurrentLocation)
         }
       }
 
