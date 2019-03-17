@@ -1,31 +1,35 @@
 <!DOCTYPE html>
 <html>
-  <head>
+
+<head>
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
     <meta charset="utf-8">
     <title>Elevation service</title>
     <style>
-      /* Always set the map height explicitly to define the size of the div
+        /* Always set the map height explicitly to define the size of the div
        * element that contains the map. */
-      #map {
-        height: 100%;
-      }
-      /* Optional: Makes the sample page fill the window. */
-      html, body {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-      }
+        #map {
+            height: 100%;
+        }
+
+        /* Optional: Makes the sample page fill the window. */
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
     </style>
 
 
     <!-- load Outdooractive Javascript API -->
     <script type="text/javascript"
-            src="https://www.outdooractive.com/alpportal/oax_head.js?build=mini&proj=api-dev-oa&key=yourtest-outdoora-ctiveapi&lang=en&use_gmap=1&gmapclientid=gme-alpsteintourismus"></script>
+        src="https://www.outdooractive.com/alpportal/oax_head.js?build=mini&proj=api-dev-oa&key=yourtest-outdoora-ctiveapi&lang=en&use_gmap=1&gmapclientid=gme-alpsteintourismus"></script>
 
 
-  </head>
-  <body>
+</head>
+
+<body>
     <div id="map"></div>
     <script>
         "use strict";
@@ -41,511 +45,462 @@
         function initMap() {
             var urlParams = new URLSearchParams(location.search);
             console.log(urlParams.toString())
-          let zoom = 16;
-          if (urlParams.has('zoom'))
-          {
-            zoom = parseInt(urlParams.get('zoom'));
-          }
-
-          map = new google.maps.Map(document.getElementById('map'), {
-          zoom: zoom,
-          center: {lat: 48.783762, lng: 9.181620},
-          mapTypeId: 'terrain',
-          scaleControl: true,
-          mapTypeControlOptions: {
-              mapTypeIds: ['Cycle', 'OSM', 'oa_osm', 'oa_osm_winter', 'oa_map', 'oa_map_winter','oa_topo', google.maps.MapTypeId.ROADMAP,google.maps.MapTypeId.HYBRID,google.maps.MapTypeId.SATELLITE,google.maps.MapTypeId.TERRAIN, 'OpenCycleMap'],
-              style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
-          }
-        });
-
-        map.mapTypes.set("OSM", new google.maps.ImageMapType({
-            getTileUrl: function(coord, zoom) {
-                return "https://tile.openstreetmap.org/" + zoom + "/" + coord.x + "/" + coord.y + ".png";
-            },
-            tileSize: new google.maps.Size(256, 256),
-            name: "OSM",
-            maxZoom: 18
-        }));
-
-        map.mapTypes.set("OpenCycleMap", new google.maps.ImageMapType({
-            getTileUrl: function(coord, zoom) {
-                return "http://tile.opencyclemap.org/cycle/" + zoom + "/" + coord.x + "/" + coord.y + ".png";
-            },
-            tileSize: new google.maps.Size(256, 256),
-            name: "OpenCycleMap",
-            maxZoom: 18
-        }));
-
-        map.mapTypes.set("Cycle", new google.maps.ImageMapType({
-            getTileUrl: function(coord, zoom) {
-                return "http://a.tile.thunderforest.com/cycle/" + zoom + "/" + coord.x + "/" + coord.y + ".png?apikey=7c352c8ff1244dd8b732e349e0b0fe8d";
-                //return "http://a.tile.thunderforest.com/landscape/" + zoom + "/" + coord.x + "/" + coord.y + ".png?apikey=7c352c8ff1244dd8b732e349e0b0fe8d";
-                //return "http://a.tile.thunderforest.com/outdoors/" + zoom + "/" + coord.x + "/" + coord.y + ".png?apikey=7c352c8ff1244dd8b732e349e0b0fe8d";
-            },
-            tileSize: new google.maps.Size(256, 256),
-            name: "Cycle",
-            maxZoom: 18
-        }));
-
-        http://a.tile.opencyclemap.org/cycle/
-
-        //'oa_hybrid','oa_topo'
-
-        map.mapTypes.set( 'oa_map',        oax.api.tilelayer( 'oa_map' ) );
-        map.mapTypes.set( 'oa_map_winter', oax.api.tilelayer( 'oa_map_winter' ) );
-        map.mapTypes.set( 'oa_osm',        oax.api.tilelayer( 'oa_osm' ) );
-        map.mapTypes.set( 'oa_osm_winter', oax.api.tilelayer( 'oa_osm_winter' ) );
-        map.mapTypes.set( 'oa_topo',       oax.api.tilelayer( 'oa_topo' ) );
-
-        oax.api.showCopyright( map );  // Mandatory
-
-        var elevator = new google.maps.ElevationService;
-
-
-	    var pathArray = window.location.hostname.split( '.' );
-        console.log(pathArray);
-        var domainName = pathArray[0];
-        console.log(domainName);
-
-
-
-        map.addListener('dragend', function() {
-            urlParams.set('lat', map.getCenter().lat());
-            urlParams.set('lng', map.getCenter().lng());
-            window.history.pushState({}, '', `${location.pathname}?${urlParams}`);
-        });
-
-        map.addListener('zoom_changed', function() {
-            urlParams.set('zoom', map.getZoom());
-            window.history.pushState({}, '', `${location.pathname}?${urlParams}`);
-        });
-
-        let functionToExecutionOnCurrentLocation;
-        if (domainName === "wiesteil")
-        {
-            map.addListener('click', createHandleMapClickEventForTwoPoints(elevator));
-            functionToExecutionOnCurrentLocation = centerMap;
-            //getCurrentLocationAndExecute(centerMap);
-        }
-        else if (domainName === "wiehoch" || domainName === "")
-        {
-            map.addListener('click', createDisplayElevationForEventAndPanToIt(elevator));
-            //getCurrentLocationAndExecute(createDisplayElevationForPositionAndPanToIt(elevator));
-            functionToExecutionOnCurrentLocation = createDisplayElevationForPositionAndPanToIt(elevator);
-
-            //Update URL params on autopan when clicked
-        }
-        else if (domainName === "wieweit")
-        {
-            infoWindow = new google.maps.InfoWindow();
-            infoWindow.setOptions({pixelOffset:new google.maps.Size(0, -20)});
-
-            map.addListener('click', createHandleMapClickEventForPolyLine(elevator));
-            functionToExecutionOnCurrentLocation = centerMap;
-            //getCurrentLocationAndExecute(centerMap);
-        }
-        else
-        {
-
-        }
-
-        if (urlParams.has('lat') && urlParams.has('lng'))
-        {
-            var latLng = new google.maps.LatLng(urlParams.get('lat'), urlParams.get('lng'));
-            map.setCenter(latLng);
-
-            //Display height in case of wiehoch
-        }
-        else
-        {
-            getCurrentLocationAndExecute(functionToExecutionOnCurrentLocation)
-        }
-      }
-
-      // Converts from degrees to radians.
-      Math.radians = function(degrees) {
-          return degrees * Math.PI / 180;
-      };
-
-      // Converts from radians to degrees.
-      Math.degrees = function(radians) {
-          return radians * 180 / Math.PI;
-      };
-
-      function createDisplayElevationForEventAndPanToIt(elevator)
-      {
-          return function (event)
-          {
-            getElevationForPosition(event.latLng, elevator, displayMarkerFromHeight);
-            map.panTo(event.latLng)
-          }
-      }
-
-      function createDisplayElevationForPositionAndPanToIt(elevator)
-      {
-          return function (position)
-          {
-              var latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-              getElevationForPosition(latLng, elevator, displayMarkerFromHeight);
-              map.panTo(latLng)
-          }
-      }
-
-      function createHandleMapClickEventForTwoPoints(elevator)
-      {
-          return function handleClickEventForTwoPoints(event)
-          {
-              if (typeof poly !== 'undefined')
-              {
-                  //Create a new poly line if the old one has a length of 2 points
-                  var path = poly.getPath();
-                  if (path.getLength() == 2)
-                  {
-                      poly = createPolyLine();
-                  }
-              }
-              //Create a new poly line if we don't have one at all
-              else
-              {
-                  poly = createPolyLine();
-              }
-
-              //Add the clicked point to the poly line
-              addPointToPolyLine(event, poly);
-
-              //Get elevation of the position and display it on the point
-              getElevationForPosition(event.latLng, elevator, handleFoundElevation);
-          }
-      }
-
-      function createHandleMapClickEventForPolyLine(elevator)
-      {
-          console.log("Creating createHandleMapClickEventForPolyLine");
-          var waypointPolyLine;
-          var arrayWithHeights = [];
-          return function handleClickEventForPolyLine(event)
-          {
-              console.log("handleClickEventForPolyLine");
-              if (typeof waypointPolyLine === 'undefined')
-              {
-                  console.log("Creating waypointPolyLine");
-                  waypointPolyLine = createPolyLine();
-              }
-              
-              
-            console.log("Adding to waypointPolyLine");
-
-            //Add the clicked point to the poly line
-            addPointToPolyLine(event, waypointPolyLine);
-
-            //Get elevation of the position and display it on the point
-            getElevationForPosition(event.latLng, elevator, createAddMarkerFunction(waypointPolyLine, arrayWithHeights));
-              
-          }
-      }
-
-      function createPolyLine()
-      {
-           //var symbolTwo = {
-             //path: google.maps.SymbolPath.FORWARD_OPEN_ARROW,
-               //strokeOpacity: 1,
-               //scale:2.4,
-
-           //};
-
-          var polyLine = new google.maps.Polyline({
-              strokeColor: '#000000',
-              strokeOpacity: 0.4,
-              strokeWeight: 1.5,
-              //icons: [
-            //      {
-            //          icon: symbolTwo,
-            //          offset: '30%',
-            //          anchor: new google.maps.Point(100,80),
-            //          repeat: '100px'
-            //      }
-              //]
-          });
-          polyLine.setMap(map);
-          polyLine.addListener('click', function()
-          {
-            polyLine.setMap(null);
-          });
-          return polyLine;
-      }
-
-      function addPointToPolyLine(event, polyLine)
-      {
-          var path = polyLine.getPath();
-
-          path.push(event.latLng);
-      }
-
-      function getElevationForPosition(location, elevator, callbackForElevation)
-      {
-          elevator.getElevationForLocations({
-            'locations': [location]
-          },
-          function(results, status)
-          {
-            if (status === 'OK')
-            {
-              // Retrieve the first result
-              if (results[0])
-              {
-                callbackForElevation(location, results[0].elevation);
-              } else
-              {
-                console.log('No results found');
-              }
-            } else
-            {
-              console.log('Elevation service failed due to: ' + status);
+            let zoom = 16;
+            if (urlParams.has('zoom')) {
+                zoom = parseInt(urlParams.get('zoom'));
             }
-          });
-      }
 
-      function calculateAndDisplayGradient()
-      {
-          var path = poly.getPath();
-          console.log("calculateGradient::path.getLength():" + path.getLength());
-          //console.log(typeof elevationFirstPoint);
-          //console.log(typeof elevationSecondPoint);
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: zoom,
+                center: { lat: 48.783762, lng: 9.181620 },
+                mapTypeId: 'terrain',
+                scaleControl: true,
+                mapTypeControlOptions: {
+                    mapTypeIds: ['Cycle', 'OSM', 'oa_osm', 'oa_osm_winter', 'oa_map', 'oa_map_winter', 'oa_topo', google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.HYBRID, google.maps.MapTypeId.SATELLITE, google.maps.MapTypeId.TERRAIN, 'OpenCycleMap'],
+                    style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
+                }
+            });
 
-          if (typeof elevationFirstPoint !== 'undefined' && typeof elevationSecondPoint !== 'undefined' && path.getLength() == 2)
-          {
-              var elevationDifference = calculateElevationDiff(elevationFirstPoint, elevationSecondPoint);
-              var distance = calculateDistance(path.getAt(0), path.getAt(1));
-              var gradientInDegrees = calculateGradient(distance, Math.abs(elevationDifference));
+            map.mapTypes.set("OSM", new google.maps.ImageMapType({
+                getTileUrl: function (coord, zoom) {
+                    return "https://tile.openstreetmap.org/" + zoom + "/" + coord.x + "/" + coord.y + ".png";
+                },
+                tileSize: new google.maps.Size(256, 256),
+                name: "OSM",
+                maxZoom: 18
+            }));
 
-              var locationInBetween = new google.maps.LatLng(
-                    (path.getAt(0).lat() + path.getAt(1).lat()) / 2.00000,
-                    (path.getAt(0).lng() + path.getAt(1).lng()) / 2.00000);
+            map.mapTypes.set("OpenCycleMap", new google.maps.ImageMapType({
+                getTileUrl: function (coord, zoom) {
+                    return "http://tile.opencyclemap.org/cycle/" + zoom + "/" + coord.x + "/" + coord.y + ".png";
+                },
+                tileSize: new google.maps.Size(256, 256),
+                name: "OpenCycleMap",
+                maxZoom: 18
+            }));
 
-              displayGradient(locationInBetween, gradientInDegrees, distance.toFixed(0), elevationDifference.toFixed(0));
-          }
-      }
+            map.mapTypes.set("Cycle", new google.maps.ImageMapType({
+                getTileUrl: function (coord, zoom) {
+                    return "http://a.tile.thunderforest.com/cycle/" + zoom + "/" + coord.x + "/" + coord.y + ".png?apikey=7c352c8ff1244dd8b732e349e0b0fe8d";
+                    //return "http://a.tile.thunderforest.com/landscape/" + zoom + "/" + coord.x + "/" + coord.y + ".png?apikey=7c352c8ff1244dd8b732e349e0b0fe8d";
+                    //return "http://a.tile.thunderforest.com/outdoors/" + zoom + "/" + coord.x + "/" + coord.y + ".png?apikey=7c352c8ff1244dd8b732e349e0b0fe8d";
+                },
+                tileSize: new google.maps.Size(256, 256),
+                name: "Cycle",
+                maxZoom: 18
+            }));
 
-      function calculateDistance(pos1, pos2)
-      {
-          var distance = google.maps.geometry.spherical.computeDistanceBetween(pos1, pos2);
-          console.log("Distance between points:" + distance);
-          return distance
-      }
+            http://a.tile.opencyclemap.org/cycle/
 
-      function calculateElevationDiff(elevationFirstPoint, elevationSecondPoint)
-      {
-          var elevationDifference =  elevationSecondPoint - elevationFirstPoint;
-          console.log("Diff between elevation: " + elevationDifference);
-          return elevationDifference
-      }
+            //'oa_hybrid','oa_topo'
 
-      function calculateGradient(distance, elevationDifference)
-      {
-          console.log(elevationDifference / distance);
-          var gradient = Math.atan(elevationDifference / distance);
-          var gradientInDegrees = Math.degrees(gradient).toFixed(1);
-          console.log("Gradient in degrees: " + gradientInDegrees);
-          return gradientInDegrees;
-      }
+            map.mapTypes.set('oa_map', oax.api.tilelayer('oa_map'));
+            map.mapTypes.set('oa_map_winter', oax.api.tilelayer('oa_map_winter'));
+            map.mapTypes.set('oa_osm', oax.api.tilelayer('oa_osm'));
+            map.mapTypes.set('oa_osm_winter', oax.api.tilelayer('oa_osm_winter'));
+            map.mapTypes.set('oa_topo', oax.api.tilelayer('oa_topo'));
 
-      function displayGradient(position, gradientInDegrees, distance, elevationDifference)
-      {
-          var polyMarker = new google.maps.Marker({
-              position: position,
-              map: map,
-              visible: true,
-              icon: {
-                path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
-                scale: 0.1,
-                //labelOrigin: new google.maps.Point(120, 120),
-                anchor: new google.maps.Point(120, 120),
-                //strokeOpacity: 30,
-                //strokeColor: 'white',
-                //fillOpacity: 30,
-                //fillColor: 'red'
-              },
-              label: {
-                  text: gradientInDegrees + "°, \u2194 " + distance + "m, \u2195 " + elevationDifference + "m",
-//                    text: gradientInDegrees + "°, \u21D4 " + distance + "m, \u21D5 " + elevationDifference + "m",
+            oax.api.showCopyright(map);  // Mandatory
 
-                  fontWeight: 'bold',
-                  fontSize: '12px',
-                  color: 'black'
-              },
-              //opacity: 0.2,
-          });
+            var elevator = new google.maps.ElevationService;
 
-          polyMarker.addListener('click', function()
-          {
-            polyMarker.setMap(null);
-          });
-      }
 
-      function getCurrentLocationAndExecute(callbackForLocation) {
-        console.log("getLocation");
-        if (navigator.geolocation) {
-                var geo_options = {
-                                enableHighAccuracy: true,
-                                timeout: Infinity,
-                                maximumAge: 0 };
-            navigator.geolocation.getCurrentPosition(callbackForLocation, error, geo_options);
-        } else {
-            alert("Geolocation is not supported by this browser.");
+            var pathArray = window.location.hostname.split('.');
+            console.log(pathArray);
+            var domainName = pathArray[0];
+            console.log(domainName);
+
+
+
+            map.addListener('dragend', function () {
+                urlParams.set('lat', map.getCenter().lat());
+                urlParams.set('lng', map.getCenter().lng());
+                window.history.pushState({}, '', `${location.pathname}?${urlParams}`);
+            });
+
+            map.addListener('zoom_changed', function () {
+                urlParams.set('zoom', map.getZoom());
+                window.history.pushState({}, '', `${location.pathname}?${urlParams}`);
+            });
+
+            let functionToExecutionOnCurrentLocation;
+            if (domainName === "wiesteil") {
+                map.addListener('click', createHandleMapClickEventForTwoPoints(elevator));
+                functionToExecutionOnCurrentLocation = centerMap;
+                //getCurrentLocationAndExecute(centerMap);
+            }
+            else if (domainName === "wiehoch" || domainName === "") {
+                map.addListener('click', createDisplayElevationForEventAndPanToIt(elevator));
+                //getCurrentLocationAndExecute(createDisplayElevationForPositionAndPanToIt(elevator));
+                functionToExecutionOnCurrentLocation = createDisplayElevationForPositionAndPanToIt(elevator);
+
+                //Update URL params on autopan when clicked
+            }
+            else if (domainName === "wieweit") {
+                infoWindow = new google.maps.InfoWindow();
+                infoWindow.setOptions({ pixelOffset: new google.maps.Size(0, -20) });
+
+                map.addListener('click', createHandleMapClickEventForPolyLine(elevator));
+                functionToExecutionOnCurrentLocation = centerMap;
+                //getCurrentLocationAndExecute(centerMap);
+            }
+            else {
+
+            }
+
+            if (urlParams.has('lat') && urlParams.has('lng')) {
+                var latLng = new google.maps.LatLng(urlParams.get('lat'), urlParams.get('lng'));
+                map.setCenter(latLng);
+
+                //Display height in case of wiehoch
+            }
+            else {
+                getCurrentLocationAndExecute(functionToExecutionOnCurrentLocation)
+            }
         }
-      }
 
-      function createAddMarkerFunction(waypointPolyLine, arrayWithHeights)
-      {
-          return function addMarkerWithHeight(latLng, height)
-          {
-            let marker = displayMarker(latLng, height.toFixed(0) + "m");
-            arrayWithHeights.push(height);
-            console.log(waypointPolyLine.getPath().length);
-            console.log(arrayWithHeights.length);
+        // Converts from degrees to radians.
+        Math.radians = function (degrees) {
+            return degrees * Math.PI / 180;
+        };
 
-            var previousHeight = arrayWithHeights[arrayWithHeights.length - 2];
-            var previousLatLng = waypointPolyLine.getPath().getAt(waypointPolyLine.getPath().length - 2);
-            
-            console.log("previousHeight: " + previousHeight);
-            console.log("previousLatLng: " + previousLatLng);
+        // Converts from radians to degrees.
+        Math.degrees = function (radians) {
+            return radians * 180 / Math.PI;
+        };
 
-            if (typeof previousHeight !== 'undefined' && typeof previousLatLng !== 'undefined')
-            {
-                var elevationDifference = calculateElevationDiff(previousHeight, height);
-                var distance = calculateDistance(previousLatLng, latLng);
+        function createDisplayElevationForEventAndPanToIt(elevator) {
+            return function (event) {
+                getElevationForPosition(event.latLng, elevator, displayMarkerFromHeight);
+                map.panTo(event.latLng)
+            }
+        }
+
+        function createDisplayElevationForPositionAndPanToIt(elevator) {
+            return function (position) {
+                var latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+                getElevationForPosition(latLng, elevator, displayMarkerFromHeight);
+                map.panTo(latLng)
+            }
+        }
+
+        function createHandleMapClickEventForTwoPoints(elevator) {
+            return function handleClickEventForTwoPoints(event) {
+                if (typeof poly !== 'undefined') {
+                    //Create a new poly line if the old one has a length of 2 points
+                    var path = poly.getPath();
+                    if (path.getLength() == 2) {
+                        poly = createPolyLine();
+                    }
+                }
+                //Create a new poly line if we don't have one at all
+                else {
+                    poly = createPolyLine();
+                }
+
+                //Add the clicked point to the poly line
+                addPointToPolyLine(event, poly);
+
+                //Get elevation of the position and display it on the point
+                getElevationForPosition(event.latLng, elevator, handleFoundElevation);
+            }
+        }
+
+        function createHandleMapClickEventForPolyLine(elevator) {
+            console.log("Creating createHandleMapClickEventForPolyLine");
+            var waypointPolyLine;
+            var arrayWithHeights = [];
+            return function handleClickEventForPolyLine(event) {
+                console.log("handleClickEventForPolyLine");
+                if (typeof waypointPolyLine === 'undefined') {
+                    console.log("Creating waypointPolyLine");
+                    waypointPolyLine = createPolyLine();
+                }
+
+
+                console.log("Adding to waypointPolyLine");
+
+                //Add the clicked point to the poly line
+                addPointToPolyLine(event, waypointPolyLine);
+
+                //Get elevation of the position and display it on the point
+                getElevationForPosition(event.latLng, elevator, createAddMarkerFunction(waypointPolyLine, arrayWithHeights));
+
+            }
+        }
+
+        function createPolyLine() {
+            //var symbolTwo = {
+            //path: google.maps.SymbolPath.FORWARD_OPEN_ARROW,
+            //strokeOpacity: 1,
+            //scale:2.4,
+
+            //};
+
+            var polyLine = new google.maps.Polyline({
+                strokeColor: '#000000',
+                strokeOpacity: 0.4,
+                strokeWeight: 1.5,
+                //icons: [
+                //      {
+                //          icon: symbolTwo,
+                //          offset: '30%',
+                //          anchor: new google.maps.Point(100,80),
+                //          repeat: '100px'
+                //      }
+                //]
+            });
+            polyLine.setMap(map);
+            polyLine.addListener('click', function () {
+                polyLine.setMap(null);
+            });
+            return polyLine;
+        }
+
+        function addPointToPolyLine(event, polyLine) {
+            var path = polyLine.getPath();
+
+            path.push(event.latLng);
+        }
+
+        function getElevationForPosition(location, elevator, callbackForElevation) {
+            elevator.getElevationForLocations({
+                'locations': [location]
+            },
+                function (results, status) {
+                    if (status === 'OK') {
+                        // Retrieve the first result
+                        if (results[0]) {
+                            callbackForElevation(location, results[0].elevation);
+                        } else {
+                            console.log('No results found');
+                        }
+                    } else {
+                        console.log('Elevation service failed due to: ' + status);
+                    }
+                });
+        }
+
+        function calculateAndDisplayGradient() {
+            var path = poly.getPath();
+            console.log("calculateGradient::path.getLength():" + path.getLength());
+            //console.log(typeof elevationFirstPoint);
+            //console.log(typeof elevationSecondPoint);
+
+            if (typeof elevationFirstPoint !== 'undefined' && typeof elevationSecondPoint !== 'undefined' && path.getLength() == 2) {
+                var elevationDifference = calculateElevationDiff(elevationFirstPoint, elevationSecondPoint);
+                var distance = calculateDistance(path.getAt(0), path.getAt(1));
                 var gradientInDegrees = calculateGradient(distance, Math.abs(elevationDifference));
 
                 var locationInBetween = new google.maps.LatLng(
-                        (previousLatLng.lat() + latLng.lat()) / 2.00000,
-                        (previousLatLng.lng() + latLng.lng()) / 2.00000);
+                    (path.getAt(0).lat() + path.getAt(1).lat()) / 2.00000,
+                    (path.getAt(0).lng() + path.getAt(1).lng()) / 2.00000);
 
                 displayGradient(locationInBetween, gradientInDegrees, distance.toFixed(0), elevationDifference.toFixed(0));
             }
+        }
 
-            let elevationPositive = 0;
-            let elevationNegative = 0;
-            for (var i=1; i < arrayWithHeights.length; i++) 
-            {
-                var previousHeight = arrayWithHeights[i-1];
-                var height = arrayWithHeights[i];
-                var diff = height - previousHeight;
-                if (diff < 0)
-                {
-                    elevationNegative += diff;
-                }
-                else
-                {
-                    elevationPositive += diff;
-                }
+        function calculateDistance(pos1, pos2) {
+            var distance = google.maps.geometry.spherical.computeDistanceBetween(pos1, pos2);
+            console.log("Distance between points:" + distance);
+            return distance
+        }
+
+        function calculateElevationDiff(elevationFirstPoint, elevationSecondPoint) {
+            var elevationDifference = elevationSecondPoint - elevationFirstPoint;
+            console.log("Diff between elevation: " + elevationDifference);
+            return elevationDifference
+        }
+
+        function calculateGradient(distance, elevationDifference) {
+            console.log(elevationDifference / distance);
+            var gradient = Math.atan(elevationDifference / distance);
+            var gradientInDegrees = Math.degrees(gradient).toFixed(1);
+            console.log("Gradient in degrees: " + gradientInDegrees);
+            return gradientInDegrees;
+        }
+
+        function displayGradient(position, gradientInDegrees, distance, elevationDifference) {
+            var polyMarker = new google.maps.Marker({
+                position: position,
+                map: map,
+                visible: true,
+                icon: {
+                    path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+                    scale: 0.1,
+                    //labelOrigin: new google.maps.Point(120, 120),
+                    anchor: new google.maps.Point(120, 120),
+                    //strokeOpacity: 30,
+                    //strokeColor: 'white',
+                    //fillOpacity: 30,
+                    //fillColor: 'red'
+                },
+                label: {
+                    text: gradientInDegrees + "°, \u2194 " + distance + "m, \u2195 " + elevationDifference + "m",
+                    //                    text: gradientInDegrees + "°, \u21D4 " + distance + "m, \u21D5 " + elevationDifference + "m",
+
+                    fontWeight: 'bold',
+                    fontSize: '12px',
+                    color: 'black'
+                },
+                //opacity: 0.2,
+            });
+
+            polyMarker.addListener('click', function () {
+                polyMarker.setMap(null);
+            });
+        }
+
+        function getCurrentLocationAndExecute(callbackForLocation) {
+            console.log("getLocation");
+            if (navigator.geolocation) {
+                var geo_options = {
+                    enableHighAccuracy: true,
+                    timeout: Infinity,
+                    maximumAge: 0
+                };
+                navigator.geolocation.getCurrentPosition(callbackForLocation, error, geo_options);
+            } else {
+                alert("Geolocation is not supported by this browser.");
             }
-            console.log("elpos:" + elevationPositive.toString());
-            console.log("elneg:" + elevationNegative.toString());
+        }
+
+        function createAddMarkerFunction(waypointPolyLine, arrayWithHeights) {
+            return function addMarkerWithHeight(latLng, height) {
+                let marker = displayMarker(latLng, height.toFixed(0) + "m");
+                arrayWithHeights.push(height);
+                console.log(waypointPolyLine.getPath().length);
+                console.log(arrayWithHeights.length);
+
+                var previousHeight = arrayWithHeights[arrayWithHeights.length - 2];
+                var previousLatLng = waypointPolyLine.getPath().getAt(waypointPolyLine.getPath().length - 2);
+
+                console.log("previousHeight: " + previousHeight);
+                console.log("previousLatLng: " + previousLatLng);
+
+                if (typeof previousHeight !== 'undefined' && typeof previousLatLng !== 'undefined') {
+                    var elevationDifference = calculateElevationDiff(previousHeight, height);
+                    var distance = calculateDistance(previousLatLng, latLng);
+                    var gradientInDegrees = calculateGradient(distance, Math.abs(elevationDifference));
+
+                    var locationInBetween = new google.maps.LatLng(
+                        (previousLatLng.lat() + latLng.lat()) / 2.00000,
+                        (previousLatLng.lng() + latLng.lng()) / 2.00000);
+
+                    displayGradient(locationInBetween, gradientInDegrees, distance.toFixed(0), elevationDifference.toFixed(0));
+                }
+
+                let elevationPositive = 0;
+                let elevationNegative = 0;
+                for (var i = 1; i < arrayWithHeights.length; i++) {
+                    var previousHeight = arrayWithHeights[i - 1];
+                    var height = arrayWithHeights[i];
+                    var diff = height - previousHeight;
+                    if (diff < 0) {
+                        elevationNegative += diff;
+                    }
+                    else {
+                        elevationPositive += diff;
+                    }
+                }
+                console.log("elpos:" + elevationPositive.toString());
+                console.log("elneg:" + elevationNegative.toString());
 
 
-            var totalDistance = 0;
-            for (var i=1; i < waypointPolyLine.getPath().getLength(); i++) 
-            {
-                totalDistance += calculateDistance(waypointPolyLine.getPath().getAt(i-1), waypointPolyLine.getPath().getAt(i));
+                var totalDistance = 0;
+                for (var i = 1; i < waypointPolyLine.getPath().getLength(); i++) {
+                    totalDistance += calculateDistance(waypointPolyLine.getPath().getAt(i - 1), waypointPolyLine.getPath().getAt(i));
+                }
+
+                infoWindow.setContent(`Uphill: ${elevationPositive.toFixed(0)}m` + '<br>'
+                    + `Downhill: ${elevationNegative.toFixed(0)}m` + '<br>'
+                    + `Distance: ${totalDistance.toFixed(0)}m` + '<br>'
+                );
+
+                //infoWindow.open(map, marker);
+
+
+
+                /*array_of_numbers.forEach(function(current_value, index, initial_array) {
+                    if (current_value % 2) {
+                        console.log('odd');
+                    }
+                    else {
+                        console.log('even');
+                    }
+                });*/
+                //https://appendto.com/2016/05/iterating-javascript-arrays-with-array-foreach/
+
+
+            }
+        }
+
+        function handleFoundElevation(latLng, height) {
+            var path = poly.getPath();
+            if (path.getLength() == 1) {
+                elevationFirstPoint = height;
+            }
+            else {
+                elevationSecondPoint = height;
             }
 
-            infoWindow.setContent(`Uphill: ${elevationPositive.toFixed(0)}m` + '<br>'
-                                + `Downhill: ${elevationNegative.toFixed(0)}m` + '<br>'
-                                + `Distance: ${totalDistance.toFixed(0)}m` + '<br>'
-                                );
+            displayMarker(latLng, height.toFixed(0) + "m");
 
-            //infoWindow.open(map, marker);
+            if (path.getLength() == 2) {
+                calculateAndDisplayGradient();
+            }
+        }
 
+        function displayMarkerFromHeight(latLng, height) {
+            displayMarker(latLng, height.toFixed(0) + "m");
+        }
 
+        function displayMarker(latLng, label) {
+            console.log("displayMarker::latLng:" + latLng);
+            console.log("displayMarker::label:" + label);
 
-              /*array_of_numbers.forEach(function(current_value, index, initial_array) {
-                  if (current_value % 2) {
-                      console.log('odd');
-                  }
-                  else {
-                      console.log('even');
-                  }
-              });*/
-              //https://appendto.com/2016/05/iterating-javascript-arrays-with-array-foreach/
+            var marker = new google.maps.Marker({
+                position: latLng,
+                icon: {
+                    path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+                    scale: 2,
+                    labelOrigin: new google.maps.Point(0, -8)
+                },
+                map: map,
+                label: {
+                    text: label.toString(),
+                    fontWeight: 'bold',
+                    fontSize: '12px',
+                    color: 'black'
+                }
+            });
 
+            marker.addListener('click', function () {
+                marker.setMap(null);
+            });
 
-          }
-      }
+            if (typeof infoWindow !== 'undefined') {
+                infoWindow.open(map, marker);
+            }
+            return marker;
+        }
 
-      function handleFoundElevation(latLng, height)
-      {
-          var path = poly.getPath();
-          if (path.getLength() == 1)
-          {
-              elevationFirstPoint = height;
-          }
-          else
-          {
-              elevationSecondPoint = height;
-          }
+        function centerMap(position) {
+            console.log(position);
+            console.log("showPosition: Latitude: " + position.coords.latitude + " Longitude: " + position.coords.longitude);
 
-          displayMarker(latLng, height.toFixed(0) + "m");
+            //Center map on current position
+            var latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+            map.setCenter(latLng);
+        }
 
-          if (path.getLength() == 2)
-          {
-              calculateAndDisplayGradient();
-          }
-      }
-
-      function displayMarkerFromHeight(latLng, height)
-      {
-          displayMarker(latLng, height.toFixed(0) + "m");
-      }
-
-      function displayMarker(latLng, label)
-      {
-          console.log("displayMarker::latLng:" + latLng);
-          console.log("displayMarker::label:" + label);
-
-          var marker = new google.maps.Marker({
-              position: latLng,
-              icon: {
-                path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
-                scale: 2,
-                labelOrigin: new google.maps.Point(0, -8)
-              },
-              map: map,
-              label: {
-                  text: label.toString(),
-                  fontWeight: 'bold',
-                  fontSize: '12px',
-                  color: 'black'
-              }
-          });
-
-          marker.addListener('click', function()
-          {
-             marker.setMap(null);
-           });
-           
-           if (typeof infoWindow !== 'undefined')
-           {
-               infoWindow.open(map, marker);
-           }
-           return marker;
-      }
-
-      function centerMap(position)
-      {
-          console.log(position);
-          console.log("showPosition: Latitude: " + position.coords.latitude + " Longitude: " + position.coords.longitude);
-
-          //Center map on current position
-          var latLng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-          map.setCenter(latLng);
-      }
-
-      function error(err) {
-          alert('Attempt to get location failed: ' + err.message);
-      };
+        function error(err) {
+            alert('Attempt to get location failed: ' + err.message);
+        };
     </script>
     <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAbddUe14N8kQMuOy7ddrB1J8imDVfBay8&callback=initMap">
-    </script>
-  </body>
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAbddUe14N8kQMuOy7ddrB1J8imDVfBay8&callback=initMap">
+        </script>
+</body>
+
 </html>
